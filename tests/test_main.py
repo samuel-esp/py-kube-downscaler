@@ -1,5 +1,7 @@
 import os.path
+import os
 import re
+import time
 from unittest.mock import MagicMock
 
 import pytest
@@ -29,6 +31,25 @@ kind: Config
 def test_main(kubeconfig, monkeypatch):
     monkeypatch.setattr(os.path, "expanduser", lambda x: str(kubeconfig))
 
+    # Mock load_config to return the expected configuration dictionary
+    def mock_load_config(path):
+        # Return the expected dictionary based on the configmap directory
+        return {
+            'NAMESPACE': 'namespace1,namespace2',
+            'GRACE_PERIOD': '600'
+        }
+
+    monkeypatch.setattr("kube_downscaler.cmd.load_config", mock_load_config)
+    # Define a custom modification time
+    mock_mod_time = time.time()
+
+    # Define a mock function that returns the custom modification time
+    def mock_getmtime(filename):
+        return mock_mod_time
+
+    # Use monkeypatch to replace os.path.getmtime with the mock function
+    monkeypatch.setattr(os.path, "getmtime", mock_getmtime)
+
     mock_scale = MagicMock()
     monkeypatch.setattr("kube_downscaler.main.scale", mock_scale)
 
@@ -39,6 +60,26 @@ def test_main(kubeconfig, monkeypatch):
 
 def test_main_continue_on_failure(kubeconfig, monkeypatch):
     monkeypatch.setattr(os.path, "expanduser", lambda x: str(kubeconfig))
+
+    # Mock load_config to return the expected configuration dictionary
+    def mock_load_config(path):
+        # Return the expected dictionary based on the configmap directory
+        return {
+            'NAMESPACE': 'namespace1,namespace2',
+            'GRACE_PERIOD': '600'
+        }
+
+    monkeypatch.setattr("kube_downscaler.cmd.load_config", mock_load_config)
+    # Define a custom modification time
+    mock_mod_time = time.time()
+
+    # Define a mock function that returns the custom modification time
+    def mock_getmtime(filename):
+        return mock_mod_time
+
+    # Use monkeypatch to replace os.path.getmtime with the mock function
+    monkeypatch.setattr(os.path, "getmtime", mock_getmtime)
+
 
     mock_shutdown = MagicMock()
     mock_handler = MagicMock()
@@ -65,6 +106,27 @@ def test_main_continue_on_failure(kubeconfig, monkeypatch):
 def test_main_exclude_namespaces(kubeconfig, monkeypatch):
     monkeypatch.setattr(os.path, "expanduser", lambda x: str(kubeconfig))
 
+    # Mock load_config to return the expected configuration dictionary
+    def mock_load_config(path):
+        # Return the expected dictionary based on the configmap directory
+        return {
+            'NAMESPACE': 'namespace1,namespace2',
+            'GRACE_PERIOD': '600'
+        }
+
+    monkeypatch.setattr("kube_downscaler.cmd.load_config", mock_load_config)
+
+    # Define a custom modification time
+    mock_mod_time = time.time()
+
+    # Define a mock function that returns the custom modification time
+    def mock_getmtime(filename):
+        return mock_mod_time
+
+    # Use monkeypatch to replace os.path.getmtime with the mock function
+    monkeypatch.setattr(os.path, "getmtime", mock_getmtime)
+
+
     mock_scale = MagicMock()
     monkeypatch.setattr("kube_downscaler.main.scale", mock_scale)
 
@@ -78,6 +140,27 @@ def test_main_exclude_namespaces(kubeconfig, monkeypatch):
 
 def test_main_matching_labels(kubeconfig, monkeypatch):
     monkeypatch.setattr(os.path, "expanduser", lambda x: str(kubeconfig))
+
+    # Mock load_config to return the expected configuration dictionary
+    def mock_load_config(path):
+        # Return the expected dictionary based on the configmap directory
+        return {
+            'NAMESPACE': 'namespace1,namespace2',
+            'GRACE_PERIOD': '600'
+        }
+
+    monkeypatch.setattr("kube_downscaler.cmd.load_config", mock_load_config)
+
+    # Define a custom modification time
+    mock_mod_time = time.time()
+
+    # Define a mock function that returns the custom modification time
+    def mock_getmtime(filename):
+        return mock_mod_time
+
+    # Use monkeypatch to replace os.path.getmtime with the mock function
+    monkeypatch.setattr(os.path, "getmtime", mock_getmtime)
+
 
     mock_scale = MagicMock()
     monkeypatch.setattr("kube_downscaler.main.scale", mock_scale)

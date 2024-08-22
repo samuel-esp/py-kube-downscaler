@@ -5,10 +5,25 @@ from kube_downscaler.cmd import get_parser
 
 
 def test_parse_args():
-    parser = get_parser()
+    config = {
+        "NAMESPACE": "default",
+        "INCLUDE_RESOURCES": "deployments",
+        "GRACE_PERIOD": "600",
+        "UPSCALE_PERIOD": "never",
+        "DEFAULT_UPTIME": "always",
+        "DOWNSCALE_PERIOD": "never",
+        "DEFAULT_DOWNTIME": "never",
+        "EXCLUDE_NAMESPACES": "kube-system",
+        "EXCLUDE_DEPLOYMENTS": "py-kube-downscaler",
+        "DOWNTIME_REPLICAS": "0",
+        "MATCHING_LABELS": "app=my-app",
+        "ADMISSION_CONTROLLER": "kyverno"
+    }
+    parser = get_parser(config)
     config = parser.parse_args(["--dry-run"])
 
     assert config.dry_run
+    assert config.grace_period == 600
 
 
 def test_check_include_resources():

@@ -23,14 +23,17 @@ spec:
         {{- if .Values.constrainedDownscaler }}
         - --namespace={{ join "," .Values.constrainedNamespaces }}
         {{- end }}
-        envFrom:
-        - configMapRef:
-            name: {{ .Values.configMapName }}
-            optional: true
+        volumeMounts:
+          - name: kube-downscaler-volume
+            mountPath: /etc/config
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
         securityContext:
           {{- toYaml .Values.securityContext | nindent 10 }}
+      volumes:
+        - name: kube-downscaler-volume
+          configMap:
+            name: {{ .Values.configMapName }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
     {{- with .Values.nodeSelector }}

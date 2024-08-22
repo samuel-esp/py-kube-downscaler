@@ -26,7 +26,26 @@ def check_include_resources(value):
     return value
 
 
-def get_parser():
+def load_config(config_dir):
+    config = {}
+
+    if not os.path.exists(config_dir):
+        raise FileNotFoundError(f"Configuration directory not found at {config_dir}")
+
+    for root, dirs, files in os.walk(config_dir):
+        for filename in files:
+            filepath = os.path.join(root, filename)
+            with open(filepath, 'r') as file:
+                value = file.read().strip()
+                # Get the relative path from the config_dir to use as the key
+                relative_path = os.path.relpath(filepath, config_dir)
+                # Use the relative path (excluding the file extension if needed) as the key
+                key = os.path.splitext(relative_path)[0]
+                config[key] = value
+
+    return config
+
+def get_parser(config):
     parser = argparse.ArgumentParser()
     upscale_group = parser.add_mutually_exclusive_group(required=False)
     downscalescale_group = parser.add_mutually_exclusive_group(required=False)
@@ -52,55 +71,55 @@ def get_parser():
     parser.add_argument(
         "--namespace",
         help="Namespace",
-        default=os.getenv("NAMESPACE", "")
+        default=config.get("NAMESPACE", "")
     )
     parser.add_argument(
         "--include-resources",
         type=check_include_resources,
-        default=os.getenv("INCLUDE_RESOURCES", "deployments"),
+        default=config.get("INCLUDE_RESOURCES", "deployments"),
         help=f"Downscale resources of this kind as comma separated list. [{', '.join(sorted(VALID_RESOURCES))}] (default: deployments)",
     )
     parser.add_argument(
         "--grace-period",
         type=int,
         help="Grace period in seconds for deployments before scaling down (default: 15min)",
-        default=os.getenv("GRACE_PERIOD", 900),
+        default=int(config.get("GRACE_PERIOD", 900)),
     )
     upscale_group.add_argument(
         "--upscale-period",
         help="Default time period to scale up once (default: never)",
-        default=os.getenv("UPSCALE_PERIOD", "never"),
+        default=config.get("UPSCALE_PERIOD", "never"),
     )
     upscale_group.add_argument(
         "--default-uptime",
         help="Default time range to scale up for (default: always)",
-        default=os.getenv("DEFAULT_UPTIME", "always"),
+        default=config.get("DEFAULT_UPTIME", "always"),
     )
     downscalescale_group.add_argument(
         "--downscale-period",
         help="Default time period to scale down once (default: never)",
-        default=os.getenv("DOWNSCALE_PERIOD", "never"),
+        default=config.get("DOWNSCALE_PERIOD", "never"),
     )
     downscalescale_group.add_argument(
         "--default-downtime",
         help="Default time range to scale down for (default: never)",
-        default=os.getenv("DEFAULT_DOWNTIME", "never"),
+        default=config.get("DEFAULT_DOWNTIME", "never"),
     )
     parser.add_argument(
         "--exclude-namespaces",
         help="Exclude namespaces from downscaling, comma-separated list of regex patterns (default: kube-system)",
-        default=os.getenv("EXCLUDE_NAMESPACES", "kube-system"),
+        default=config.get("EXCLUDE_NAMESPACES", "kube-system"),
     )
     parser.add_argument(
         "--exclude-deployments",
         help="Exclude specific deployments from downscaling. Despite its name, this option will match the name of any included resource type (Deployment, StatefulSet, CronJob, ..). (default: py-kube-downscaler,kube-downscaler,downscaler)",
-        default=os.getenv("EXCLUDE_DEPLOYMENTS", "py-kube-downscaler,kube-downscaler,downscaler"),
+        default=config.get("EXCLUDE_DEPLOYMENTS", "py-kube-downscaler,kube-downscaler,downscaler"),
     )
     parser.add_argument(
         "--downtime-replicas",
         type=int,
         help="Default amount of replicas when downscaling (default: 0)",
-        default=int(os.getenv("DOWNTIME_REPLICAS", 0)),
+        default=int(config.get("DOWNTIME_REPLICAS", 0)),
     )
     parser.add_argument(
         "--deployment-time-annotation",
@@ -113,12 +132,12 @@ def get_parser():
     )
     parser.add_argument(
         "--matching-labels",
-        default=os.getenv("MATCHING_LABELS", ""),
+        default=config.get("MATCHING_LABELS", ""),
         help="Apply downscaling to resources with the supplied labels. This is a comma-separated list of regex patterns. This is optional, downscaling will be applied to all resources by default.",
     )
     parser.add_argument(
         "--admission-controller",
-        default=os.getenv("ADMISSION_CONTROLLER", ""),
+        default=config.get("ADMISSION_CONTROLLER", ""),
         help="Apply downscaling to jobs using the supplied admission controller. Jobs should be included inside --include-resources if you want to use this parameter. kyverno and gatekeeper are supported.",
     )
     return parser

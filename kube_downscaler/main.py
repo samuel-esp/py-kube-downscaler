@@ -2,6 +2,7 @@
 import logging
 import re
 import time
+import os
 
 from kube_downscaler import __version__
 from kube_downscaler import cmd
@@ -10,10 +11,15 @@ from kube_downscaler.scaler import scale
 
 logger = logging.getLogger("downscaler")
 
+def config(args=None):
+    config = cmd.load_config('/etc/config')
+    parser = cmd.get_parser(config)
+    args = parser.parse_args(args)  # Parse the args, which could be None or a list
+    return args
 
 def main(args=None):
-    parser = cmd.get_parser()
-    args = parser.parse_args(args)
+    if args is None or isinstance(args, list):
+        args = config(args)  # Now config() can handle the list of args
 
     logging.basicConfig(
         format="%(asctime)s %(levelname)s: %(message)s",
@@ -47,7 +53,6 @@ def main(args=None):
         args.enable_events,
     )
 
-
 def run_loop(
     run_once,
     namespace,
@@ -69,6 +74,8 @@ def run_loop(
     enable_events=False,
 ):
     handler = shutdown.GracefulShutdown()
+    config_directory = '/etc/config'
+    last_mod_time = os.path.getmtime(config_directory)
 
     if namespace == "":
         namespaces = []
@@ -82,6 +89,29 @@ def run_loop(
         constrained_downscaler = False
 
     while True:
+
+        current_mod_time = os.path.getmtime(config_directory)
+        if current_mod_time != last_mod_time:
+            logger.info("**CONFIGMAP UPDATED**")
+            last_mod_time = current_mod_time
+
+            args = update_config()
+            config_str = ", ".join(f"{k}={v}" for k, v in sorted(vars(args).items()))
+            logger.info(f"Downscaler v{__version__} updated with {config_str}")
+
+            namespace=args.namespace
+            include_resources=args.include_resources
+            matching_labels=args.matching_labels
+            admission_controller=args.admission_controller
+            upscale_period=args.upscale_period
+            downscale_period=args.downscale_period
+            default_uptime=args.default_uptime
+            default_downtime=args.default_downtime
+            exclude_namespaces=args.exclude_namespaces
+            exclude_deployments=args.exclude_deployments
+            grace_period=args.grace_period
+            downtime_replicas= args.downtime_replicas
+
         try:
             scale(
                 namespaces,
@@ -108,7 +138,9 @@ def run_loop(
             )
         except Exception as e:
             logger.exception(f"Failed to autoscale: {e}")
+
         if run_once or handler.shutdown_now:
-            return
+            return False
+
         with handler.safe_exit():
             time.sleep(interval)
