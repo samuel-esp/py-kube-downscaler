@@ -11,15 +11,21 @@ from kube_downscaler.scaler import scale
 
 logger = logging.getLogger("downscaler")
 
+'''
 def config(args=None):
     config = cmd.load_config('/etc/config')
     parser = cmd.get_parser(config)
     args = parser.parse_args(args)  # Parse the args, which could be None or a list
     return args
-
+'''
 def main(args=None):
+    '''
     if args is None or isinstance(args, list):
         args = config(args)  # Now config() can handle the list of args
+    '''
+    config = cmd.load_config('/etc/config')
+    parser = cmd.get_parser(config)
+    args = parser.parse_args(args)
 
     logging.basicConfig(
         format="%(asctime)s %(levelname)s: %(message)s",

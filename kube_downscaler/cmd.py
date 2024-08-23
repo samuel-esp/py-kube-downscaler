@@ -45,6 +45,7 @@ def load_config(config_dir):
 
     return config
 
+
 def get_parser(config):
     parser = argparse.ArgumentParser()
     upscale_group = parser.add_mutually_exclusive_group(required=False)
