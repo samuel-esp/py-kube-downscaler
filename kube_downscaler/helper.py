@@ -1,5 +1,6 @@
 import datetime
 import logging
+import os
 import re
 from typing import Match
 
@@ -133,3 +134,23 @@ def create_event(resource, message: str, reason: str, event_type: str, dry_run: 
             return event
         except Exception as e:
             logger.error(f"Could not create event {event.obj}: {e}")
+
+def get_current_namespace():
+    namespace_file = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+
+    try:
+        with open(namespace_file, 'r') as file:
+            namespace = file.read().strip()
+    except Exception as e:
+        raise RuntimeError(f"Failed to read namespace file: {e}") from e
+
+    return namespace
+
+
+def get_hostname():
+    try:
+        hostname = os.uname().nodename
+    except Exception as e:
+        raise RuntimeError(f"Failed to get hostname: {e}") from e
+
+    return hostname

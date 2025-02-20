@@ -1,6 +1,8 @@
 import contextlib
+import logging
 import signal
 import sys
+import threading
 
 
 class GracefulShutdown:
@@ -8,10 +10,12 @@ class GracefulShutdown:
     safe_to_exit = False
 
     def __init__(self):
-        signal.signal(signal.SIGINT, self.exit_gracefully)
-        signal.signal(signal.SIGTERM, self.exit_gracefully)
+        if threading.current_thread() == threading.main_thread():
+            signal.signal(signal.SIGINT, self.exit_gracefully)
+            signal.signal(signal.SIGTERM, self.exit_gracefully)
 
     def exit_gracefully(self, signum, frame):
+        logging.info("Shutting down gracefully")
         self.shutdown_now = True
         if self.safe_to_exit:
             sys.exit(0)

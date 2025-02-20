@@ -39,7 +39,7 @@ def get_parser():
         "--debug", "-d", help="Debug mode: print more information", action="store_true"
     )
     parser.add_argument(
-        "--once", help="Run loop only once and exit", action="store_true"
+        "--once", help="Run loop only once and exit", action="store_true", default="store_false"
     )
     parser.add_argument(
         "--interval", type=int, help="Loop interval (default: 30s)", default=30
