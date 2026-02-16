@@ -132,12 +132,16 @@ def test_scaler_namespace_included(monkeypatch):
 
     def get(url, version, **kwargs):
         if url.startswith("namespaces/"):
-            # Taking what is after "namespaces/". we need to unsure there is a name; like this: "namespaces/<name>"
-            remainder = url[len("namespaces/"):]
+            # Taking what is after "namespaces/". We need to ensure there is a name; like this: "namespaces/<name>"
+            remainder = url[len("namespaces/") :]
             # Fail if there is nothing after the slash, constrained mode cannot do cluster-wide queries
-            assert remainder, f"Namespace API call must have a name after 'namespaces/': {url}"
+            assert remainder, (
+                f"Namespace API call must have a name after 'namespaces/': {url}"
+            )
             # Fail if nothing after the slash, constrained mode cannot do cluster-wide queries (query-parameters case)
-            assert "?" not in remainder, f"Namespace API call must not contain query parameters: {url}"
+            assert "?" not in remainder, (
+                f"Namespace API call must not contain query parameters: {url}"
+            )
 
         if url == "pods":
             data = {"items": []}
